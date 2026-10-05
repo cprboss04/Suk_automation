@@ -10,7 +10,6 @@ welcome, broadcast, schedule, persistent DB):
   * Referral rewards                                   (/invite)
   * Subah + shaam smart notifications (opt-out: /notify off)
   * Admin: /backup + roz raat 3 baje auto-backup admin ko
-
 Install:
     pip install "python-telegram-bot[job-queue]>=21" "openai>=1.60" python-dotenv tzdata
 
