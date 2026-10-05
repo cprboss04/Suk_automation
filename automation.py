@@ -1162,8 +1162,7 @@ async def post_init(app):
 def main():
     init_db()
     app = Application.builder().token(TOKEN).post_init(post_init).build()
-    for name, fn in {**PUBLIC, **ADMIN_CMDS}.items():
-        app.add_handler(CommandHandler(name, fn))
+    for name, fn in {**PUBLIC, **ADMIN_CMDS}.items():   app.add_handler(CommandHandler(name, fn))
     for key in SETTING_DEFAULTS:
         app.add_handler(CommandHandler(key, make_setting_handler(key)))
     app.add_handler(CallbackQueryHandler(callbacks))
