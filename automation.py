@@ -1083,7 +1083,7 @@ PUBLIC = {
     "mode": mode_cmd, "invite": invite, "notify": notify,
     "remind": remind, "reminders": reminders, "delremind": delremind,
 }
-    ADMIN_CMDS = {
+ADMIN_CMDS = {
     "panel": panel, "stats": stats, "dbinfo": database_info, "backup": backup, "broadcast": broadcast,
     "addreply": addreply, "delreply": delreply, "replies": replies, "addban": addban, "delban": delban,
     "schedule": schedule_cmd, "schedules": schedules_cmd, "delschedule": delschedule_cmd,
