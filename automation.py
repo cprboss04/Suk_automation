@@ -114,7 +114,10 @@ def pick_db():
         return LOCAL_DB, False
 
 
-DB_PATH, PERSISTENT = pick_db()
+DB_PATH = 'automation.db'
+
+PERSISTENT = False.
+
 client = AsyncOpenAI(api_key=OPENAI_KEY) if OPENAI_KEY else None
 
 logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.INFO)
