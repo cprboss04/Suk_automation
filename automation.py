@@ -46,6 +46,7 @@ from telegram import (
     BotCommand,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
+    MenuButtonCommands,
     ReplyKeyboardMarkup,
     Update,
 )
@@ -1086,94 +1087,4 @@ PUBLIC = {
 ADMIN_CMDS = {
     "panel": panel, "stats": stats, "dbinfo": database_info, "backup": backup, "broadcast": broadcast,
     "addreply": addreply, "delreply": delreply, "replies": replies, "addban": addban, "delban": delban,
-    "schedule": schedule_cmd, "schedules": schedules_cmd, "delschedule": delschedule_cmd,
-}
-MENU = {"🏠 Menu": menu, "🎮 Games": games, "🎁 Daily": daily, "👤 Profile": me, "🏆 Top": top, "🎭 Mode": mode_cmd, "🔗 Invite": invite}
-GO = {"menu", "reminders", "daily", "games", "quiz", "riddle", "dice", "slot", "darts", "guess", "me", "top", "mode", "invite", "help"}
-
-
-async def callbacks(u, c):
-    q, d = u.callback_query, u.callback_query.data or ""
-    uid = u.effective_user.id
-    if d.startswith("go:") and d[3:] in GO:
-        await q.answer()
-        return await PUBLIC[d[3:]](u, c)
-    if d.startswith("qz:"):
-        _, qid, chosen = d.split(":")
-        return await quiz_answer(u, c, qid, chosen)
-    if d.startswith("md:") and d[3:] in MODES:
-        run("UPDATE users SET mode=? WHERE user_id=?", (d[3:], uid))
-        HISTORY.pop(uid, None)
-        await q.answer()
-        return await q.edit_message_text(f"✅ AI mode: {MODES[d[3:]][0]}\nAb kuch bhi poochho!")
-    if d == "rd":
-        ans = c.user_data.pop("riddle", None)
-        if not ans:
-            return await q.answer("Jawab pehle hi dekh liya.", show_alert=True)
-        await q.answer()
-        up, coins = game_reward(uid, 5, 3)
-        return await say(u, f"💡 Jawab: {ans}\n🪙 +{coins}" + (UP if up else ""))
-    if d == "nt":
-        v = 1 - profile(uid)[4]
-        run("UPDATE users SET notify=? WHERE user_id=?", (v, uid))
-        return await q.answer(f"🔔 Notifications {'ON' if v else 'OFF'}", show_alert=True)
-    if d in ("ai:more", "ai:short"):
-        await q.answer("⏳")
-        if not HISTORY.get(uid):
-            return await say(u, "Pehle koi sawal poochho 🙂")
-        return await ai_reply(u, c, "Isi ko aur detail me samjhao." if d == "ai:more" else "Isi ko 2 lines me short karo.")
-    if not await admin_only(u):
-        return
-    await q.answer()
-    if d.startswith("ad:") and d[3:] in ADMIN_SAFE:
-        await ADMIN_CMDS[d[3:]](u, c)
-    elif d == "stats":
-        await say(u, stats_text())
-    elif d.startswith("toggle:") and d[7:] in SETTING_DEFAULTS:
-        key = d[7:]
-        set_setting(key, "off" if get_setting(key) == "on" else "on")
-        await q.edit_message_text(panel_text(), reply_markup=panel_markup())
-    elif d == "broadcast_help":
-        await say(u, "Usage:\n/broadcast Your message here")
-
-
-async def error_handler(update, c):
-    logger.error("Unhandled error", exc_info=c.error)
-
-
-async def post_init(app):
-    await app.bot.set_my_commands([BotCommand(n, t) for n, t in (
-        ("start", "Bot shuru karo"), ("menu", "🏠 Main menu"), ("daily", "🎁 Daily reward"), ("games", "🎮 Games"),
-        ("quiz", "🧠 Quiz"), ("me", "👤 Profile"), ("top", "🏆 Leaderboard"), ("mode", "🎭 AI style"),
-        ("invite", "🔗 Invite & earn"), ("remind", "⏰ Reminder"), ("help", "📚 Help"))])
-    jq = app.job_queue
-    if jq is None:
-        return logger.warning("JobQueue missing - schedules/reminders/notifications disabled")
-    for sid, chat_id, hh, mm, message in run("SELECT id, chat_id, hh, mm, message FROM schedules", fetch="all"):
-        register_job(app, sid, chat_id, hh, mm, message)
-    now = pytime.time()
-    for rid, due in run("SELECT id, due FROM reminders", fetch="all"):
-        jq.run_once(fire_reminder, max(due - now, 5), data=rid, name=f"rem_{rid}")
-    jq.run_daily(push_job, time(MORNING_HOUR, tzinfo=TZ), data="m", name="push_m")
-    jq.run_daily(push_job, time(EVENING_HOUR, tzinfo=TZ), data="e", name="push_e")
-    jq.run_daily(auto_backup, time(3, tzinfo=TZ), name="auto_backup")
-
-
-def main():
-    init_db()
-    app = Application.builder().token(TOKEN).post_init(post_init).build()
-    for name, fn in {**PUBLIC, **ADMIN_CMDS}.items():
-        app.add_handler(CommandHandler(name, fn))
-    for key in SETTING_DEFAULTS:
-        app.add_handler(CommandHandler(key, make_setting_handler(key)))
-    app.add_handler(CallbackQueryHandler(callbacks))
-    app.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS, welcome_new_member))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, message_handler))
-    app.add_error_handler(error_handler)
-    print(f"\n{'=' * 50}\n🤖 {BOT_NAME} Started!\n💾 DB: {DB_PATH}\n"
-          f"🛡️ Persistent: {'ENABLED ✅' if PERSISTENT else 'DISABLED ⚠️'}\n{'=' * 50}\n")
-    app.run_polling(allowed_updates=Update.ALL_TYPES)
-
-
-if __name__ == "__main__":
-    main()
+    "schedule": schedule_cmd, "schedules": schedules_cmd, "delsched
