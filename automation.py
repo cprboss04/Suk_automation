@@ -116,7 +116,7 @@ def pick_db():
 
 DB_PATH = 'automation.db'
 
-PERSISTENT = False.
+PERSISTENT = False
 
 client = AsyncOpenAI(api_key=OPENAI_KEY) if OPENAI_KEY else None
 
